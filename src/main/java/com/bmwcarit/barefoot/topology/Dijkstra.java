@@ -119,8 +119,8 @@ public class Dijkstra<E extends AbstractEdge<E>, P extends Point<E>> implements 
          */
         Map<E, Set<P>> targetEdges = new HashMap<>();
         for (P target : targets) {
-            logger.trace("initialize target {} with edge {} and fraction {}", target,
-                    target.edge().id(), target.fraction());
+            logger.trace("initialize target {} with edge {} and fraction {} and max = {}", target,
+                    target.edge().id(), target.fraction(), max);
 
             if (!targetEdges.containsKey(target.edge())) {
                 targetEdges.put(target.edge(), new HashSet<>(Arrays.asList(target)));
@@ -146,22 +146,24 @@ public class Dijkstra<E extends AbstractEdge<E>, P extends Point<E>> implements 
             double startbound =
                     bound != null ? bound.cost(source.edge(), 1 - source.fraction()) : 0.0;
 
-            logger.trace("init source {} with start edge {} and fraction {} with {} cost", source,
-                    source.edge().id(), source.fraction(), startcost);
+            logger.trace("init source {} with start edge {} and fraction {} with {} cost  and startbound = {}", source,
+                    source.edge().id(), source.fraction(), startcost, startbound);
 
             if (targetEdges.containsKey(source.edge())) { // start edge reaches target edge
                 for (P target : targetEdges.get(source.edge())) {
                     if (target.fraction() < source.fraction()) {
+                        logger.trace("target.fraction {} < source.fraction {}", target.fraction(), source.fraction());
                         continue;
                     }
                     double reachcost = startcost - cost.cost(source.edge(), 1 - target.fraction());
+                    logger.trace("reachcost =  {}", reachcost);
                     double reachbound = bound != null
                             ? startcost - bound.cost(source.edge(), 1 - target.fraction())
                             : 0.0;
 
-                    logger.trace("reached target {} with start edge {} from {} to {} with {} cost",
+                    logger.trace("reached target {} with start edge {} from {} to {} with {} cost and reachbound = {}",
                             target, source.edge().id(), source.fraction(), target.fraction(),
-                            reachcost);
+                            reachcost, reachbound);
 
                     Mark reach = new Mark(source.edge(), null, reachcost, reachbound);
                     reaches.put(reach, target);
@@ -203,7 +205,7 @@ public class Dijkstra<E extends AbstractEdge<E>, P extends Point<E>> implements 
             }
 
             if (max != null && current.four() > max) {
-                logger.trace("reached maximum bound");
+                logger.trace("reached maximum bound. current.four = {} max = {}", current.four(), max);
                 break;
             }
 
@@ -272,6 +274,7 @@ public class Dijkstra<E extends AbstractEdge<E>, P extends Point<E>> implements 
 
         for (P target : targets) {
             if (!finishs.containsKey(target)) {
+                logger.trace("paths.put(target, null)");
                 paths.put(target, null);
             } else {
                 LinkedList<E> path = new LinkedList<>();
